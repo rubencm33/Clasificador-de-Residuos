@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Recycling AI - Dashboard</title>
+    <!-- Tailwind CSS para estilos modernos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons para los iconos -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Estilos personalizados y animaciones */
+        body {
+            background-color: #f3f4f6;
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .drag-active {
+            border-color: #10b981 !important; /* Emerald 500 */
+            background-color: #ecfdf5 !important; /* Emerald 50 */
+        }
+        #loading-spinner {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans text-gray-800 p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Cabecera -->
+        <header class="mb-8 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-emerald-500 rounded-xl text-white shadow-lg shadow-emerald-200">
+                    <i data-lucide="leaf" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Smart Recycling <span class="text-emerald-500">AI</span></h1>
+                    <p class="text-sm text-gray-500 font-medium mt-1">Panel de Clasificación de Residuos en Tiempo Real</p>
+                </div>
+            </div>
+            <button onclick="cargarEstadisticas()" class="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors text-sm font-medium text-gray-600">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i> Actualizar Datos
+            </button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Columna Izquierda: Escáner y Resultados (Ocupa 2 columnas) -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Zona de Subida -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i data-lucide="camera" class="w-5 h-5 text-emerald-500"></i> Escáner Visual
+                    </h2>
+
+                    <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all group relative overflow-hidden">
+                        <input type="file" id="file-input" class="hidden" accept="image/*">
+
+                        <div id="upload-content" class="flex flex-col items-center">
+                            <div class="w-16 h-16 mb-4 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+                                <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+                            </div>
+                            <p class="text-lg font-medium text-gray-700">Arrastra una imagen aquí o haz clic</p>
+                            <p class="text-sm text-gray-400 mt-2">Formatos soportados: JPG, PNG, JPEG</p>
+                        </div>
+
+                        <!-- Estado de Carga -->
+                        <div id="loading-spinner" class="absolute inset-0 bg-white/90 flex flex-col items-center justify-center">
+                            <i data-lucide="loader-2" class="w-10 h-10 text-emerald-500 animate-spin mb-3"></i>
+                            <p class="text-sm font-medium text-emerald-600 animate-pulse">La IA está analizando el material...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zona de Resultados -->
+                <div id="result-container" class="glass-panel rounded-2xl p-6 hidden">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i> Resultado de Clasificación
+                    </h2>
+                    <div class="bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border border-gray-200">
+                        <img id="result-image" src="" alt="Resultado procesado" class="max-w-full max-h-[500px] object-contain">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Columna Derecha: Dashboard de Estadísticas -->
+            <div class="space-y-6">
+                <div class="glass-panel rounded-2xl p-6">
+                    <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-emerald-500"></i> Impacto Ambiental
+                    </h2>
+
+                    <!-- Tarjeta Total -->
+                    <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-5 text-white mb-6 shadow-lg shadow-emerald-200/50">
+                        <p class="text-emerald-100 text-sm font-medium">Objetos Procesados</p>
+                        <p class="text-4xl font-bold mt-1" id="stat-total">0</p>
+                    </div>
+
+                    <!-- Desglose por Material -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-yellow-100 text-yellow-600 rounded-md"><i data-lucide="package" class="w-5 h-5"></i></div>
+                                <span class="font-medium text-gray-700">Cartón</span>
+                            </div>
+                            <span class="text-lg font-bold text-gray-900" id="stat-carton">0</span>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-blue-100 text-blue-600 rounded-md"><i data-lucide="bottle-water" class="w-5 h-5"></i></div>
+                                <span class="font-medium text-gray-700">Plástico</span>
+                            </div>
+                            <span class="text-lg font-bold text-gray-900" id="stat-plastico">0</span>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-green-100 text-green-600 rounded-md"><i data-lucide="wine" class="w-5 h-5"></i></div>
+                                <span class="font-medium text-gray-700">Vidrio</span>
+                            </div>
+                            <span class="text-lg font-bold text-gray-900" id="stat-vidrio">0</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-gray-100">
+                        <a href="http://127.0.0.1:8000/descargar-informe/" class="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors font-medium text-sm">
+                            <i data-lucide="download" class="w-4 h-4"></i> Descargar Informe CSV
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- UI Modal de Mensajes (Reemplaza a los alert()) -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-xl transform transition-transform translate-y-20 opacity-0 flex items-center gap-3 z-50">
+        <i data-lucide="info" class="w-5 h-5 text-emerald-400"></i>
+        <span id="toast-msg" class="text-sm font-medium">Mensaje</span>
+    </div>
+
+    <script>
+        // Inicializar iconos
+        lucide.createIcons();
+
+        const API_URL = "http://127.0.0.1:8000";
+
+        // Elementos del DOM
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const uploadContent = document.getElementById('upload-content');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const resultContainer = document.getElementById('result-container');
+        const resultImage = document.getElementById('result-image');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-msg');
+
+        // --- SISTEMA DE TOAST (MENSAJES) ---
+        function showToast(message, isError = false) {
+            toastMsg.textContent = message;
+            if(isError) {
+                toast.classList.replace('bg-gray-900', 'bg-red-600');
+                toast.querySelector('i').setAttribute('data-lucide', 'alert-triangle');
+            } else {
+                toast.classList.replace('bg-red-600', 'bg-gray-900');
+                toast.querySelector('i').setAttribute('data-lucide', 'info');
+            }
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 4000);
+        }
+
+        // --- CARGAR ESTADÍSTICAS ---
+        async function cargarEstadisticas() {
+            try {
+                const response = await fetch(`${API_URL}/stats/`);
+                if (!response.ok) throw new Error('Error al conectar con la API');
+
+                const data = await response.json();
+                const stats = data.datos || data.stats; // Soporte por si cambia la API
+
+                if(stats) {
+                    document.getElementById('stat-total').textContent = stats.TOTAL_GENERAL || 0;
+                    document.getElementById('stat-carton').textContent = stats.CARTON || 0;
+                    document.getElementById('stat-plastico').textContent = stats.PLASTICO || 0;
+                    document.getElementById('stat-vidrio').textContent = stats.VIDRIO || 0;
+                }
+            } catch (error) {
+                console.error(error);
+                showToast("No se pudieron cargar las estadísticas. Verifica que la API esté encendida.", true);
+            }
+        }
+
+        // Cargar estadísticas al iniciar
+        cargarEstadisticas();
+
+        // --- SUBIDA DE IMAGEN ---
+        function handleFile(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                showToast("Por favor, sube un archivo de imagen válido.", true);
+                return;
+            }
+
+            // Mostrar carga
+            uploadContent.style.opacity = "0.2";
+            loadingSpinner.style.display = "flex";
+            resultContainer.classList.add('hidden');
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch(`${API_URL}/clasificar-visual/`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("Error en la clasificación");
+                return response.blob();
+            })
+            .then(blob => {
+                // Ocultar carga
+                uploadContent.style.opacity = "1";
+                loadingSpinner.style.display = "none";
+
+                // Mostrar resultado
+                const imageUrl = URL.createObjectURL(blob);
+                resultImage.src = imageUrl;
+                resultContainer.classList.remove('hidden');
+
+                showToast("¡Clasificación completada con éxito!");
+
+                // Actualizar los numeritos tras 1 segundo para dar tiempo a la API a guardar
+                setTimeout(cargarEstadisticas, 1000);
+            })
+            .catch(error => {
+                console.error(error);
+                uploadContent.style.opacity = "1";
+                loadingSpinner.style.display = "none";
+                showToast("Hubo un error al procesar la imagen.", true);
+            });
+        }
+
+        // --- EVENTOS DRAG & DROP ---
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-active');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-active');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-active');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+    </script>
+</body>
+</html>

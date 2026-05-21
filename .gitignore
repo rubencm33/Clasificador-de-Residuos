@@ -13,6 +13,13 @@ __pycache__/
 # Carpetas de imágenes generadas y pruebas
 outputs/
 
+# La carpeta de resultados temporales de YOLO
+runs/
+
+# El modelo base genérico (pesa y se descarga solo si hace falta)
+yolov8n.pt
+
 # El dataset gigante (Si lo tuvieras dentro de la carpeta del proyecto)
 DATASET/
 dataset/
+dataset_yolo
