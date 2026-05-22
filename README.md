@@ -1,36 +1,42 @@
-# ♻️ Smart Recycling AI — Ecosistema de Visión Artificial e IA para Reciclaje
+# ♻️ Clasificador de Reciclaje — Smart Recycling AI
 
-![Python](https://img.shields.io/badge/Python-3.13-blue?style=for-the-badge&logo=python)
-![Ultralytics YOLO](https://img.shields.io/badge/YOLOv8-Ultralytics-FF6F00?style=for-the-badge&logo=yolo)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688?style=for-the-badge&logo=fastapi)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15+-FF6F00?style=for-the-badge&logo=tensorflow)
-![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-5C3EE8?style=for-the-badge&logo=opencv)
+[![Python](https://img.shields.io/badge/Python-3.13-blue?style=for-the-badge&logo=python)](https://python.org)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15+-FF6F00?style=for-the-badge&logo=tensorflow)](https://tensorflow.org)
+[![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-purple?style=for-the-badge)](https://ultralytics.com)
+[![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-5C3EE8?style=for-the-badge&logo=opencv)](https://opencv.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
 
-Este repositorio contiene el desarrollo completo de un sistema inteligente y escalable para la clasificación y detección múltiple de residuos domésticos (**Cartón, Plástico y Vidrio**). 
+Sistema escalable de Visión Artificial e Inteligencia Artificial para la clasificación y detección automatizada de residuos domésticos (**Cartón, Plástico y Vidrio**).
 
-El proyecto documenta una evolución de ingeniería en dos fases fundamentales: comenzando con un **Pipeline Híbrido secuencial (Fase 1)** y escalando hacia una arquitectura de **Detección Unificada de múltiples objetos en tiempo real (Fase 2)** integrada con un panel de control web interactivo.
-
----
-
-## 🌟 FASE 2 (Actual): Detección Múltiple y Dashboard Web
-
-La arquitectura definitiva del sistema elimina las dependencias geométricas tradicionales y unifica el proceso de inferencia para entornos reales y complejos.
-
-* **🚀 Inferencia Multi-Objeto (YOLOv8):** Mediante el entrenamiento de un modelo personalizado (`modelo_yolo_reciclaje.pt`, generado desde `best.pt`), el sistema localiza, encuadra y clasifica múltiples residuos simultáneamente en la misma escena, superando las limitaciones de oclusión y ruido de fondo.
-* **🖥️ Panel de Control Web Interactivo (Frontend):** Interfaz gráfica moderna con diseño *Glassmorphism* servida directamente por la API. Permite a los usuarios arrastrar y soltar imágenes (*Drag & Drop*) para obtener la inferencia visual con *Bounding Boxes* y porcentajes de seguridad renderizados al vuelo.
-* **📊 Persistencia y Analítica:** Servidor asíncrono (**FastAPI**) que monitoriza el impacto ecológico en tiempo real, actualiza los contadores del Dashboard y genera informes administrativos descargables en formato CSV.
+El proyecto ha evolucionado a través de dos arquitecturas: una primera versión híbrida (OpenCV + MobileNetV2) y una segunda versión de detección múltiple en tiempo real basada en YOLOv8, todo ello servido a través de una API REST y un panel de control web interactivo.
 
 ---
 
-## 🧠 FASE 1 (MVP): Clasificación Híbrida Aislada
+## 🏗️ Evolución del Sistema
 
-La primera iteración del proyecto se diseñó como un Producto Mínimo Viable enfocado en la eficiencia local:
-* **Segmentación Clásica:** Implementación del algoritmo `GrabCut` (OpenCV) y operaciones morfológicas para aislar el residuo del entorno y extraer la Región de Interés (ROI).
-* **Clasificación Convolucional:** Red neuronal ligera *MobileNetV2* optimizada mediante *Transfer Learning* y *Fine-Tuning* para clasificar objetos individuales en hardware de consumo común (CPU).
+### Arquitectura V1 — Clasificación Híbrida (OpenCV + MobileNetV2)
+- **👁️ Segmentación (Fase 1):** Aislamiento del residuo mediante el algoritmo `GrabCut` y extracción del *Bounding Box* rotado (`MinAreaRect`) con OpenCV.
+- **🧠 Clasificación (Fase 2):** Red neuronal **MobileNetV2** entrenada con *Transfer Learning* y *Fine-Tuning* para detectar casos complejos como envases multicapa (Tetra Brick).
+- **🎯 Precisión:** ~95% de *Validation Accuracy* sobre objetos individuales.
+- **⚡ Rendimiento:** >20 FPS en CPU convencional.
+
+### Arquitectura V2 — Detección Múltiple (YOLOv8)
+- **🚀 Single-Shot Detector:** Detección simultánea de múltiples residuos en la misma escena sin necesidad de preprocesamiento con OpenCV.
+- **📦 Dataset anotado:** Entrenamiento con dataset de Roboflow con miles de imágenes etiquetadas con *Bounding Boxes* y archivo `data.yaml`.
+- **🌐 Dashboard Web:** Panel de control interactivo (HTML + Tailwind CSS + JavaScript) con *Drag & Drop* para clasificar imágenes desde el navegador.
+- **⚡ Rendimiento:** >30 FPS en CPU, procesando escenas completas en un único pase tensorial.
 
 ---
 
-## 📂 Arquitectura del Repositorio
+## ✨ Características Principales
+
+- **API REST Asíncrona:** Backend con FastAPI con endpoints de clasificación visual (streaming), datos (JSON), estadísticas y descarga de informes CSV.
+- **📊 Analítica y Persistencia:** Registro automático de cada inferencia con *timestamp*. Generación de reportes de sostenibilidad en formato CSV.
+- **🎥 Visión en Tiempo Real:** Módulo `live_cam.py` con zona de escaneo estática (V1) y monitorización de pantalla completa (V2).
+
+---
+
+## 📂 Arquitectura del Proyecto
 
 ```text
 Reciclador/
